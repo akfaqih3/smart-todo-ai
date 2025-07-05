@@ -1,0 +1,87 @@
+### Test API endpoints
+
+GET http://127.0.0.1:8000/api/categories/
+Accept: application/json
+
+###
+
+POST http://127.0.0.1:8000/api/categories/
+Content-Type: application/json
+
+{
+    "name": "Personal"
+}
+
+###
+
+GET http://127.0.0.1:8000/api/categories/1/
+Accept: application/json
+
+###
+
+POST http://127.0.0.1:8000/api/categories/1/increment-usage/
+Content-Type: application/json
+
+###
+
+POST http://127.0.0.1:8000/api/categories/1/decrement-usage/
+Content-Type: application/json
+
+###
+
+GET http://127.0.0.1:8000/api/tasks/
+Accept: application/json
+
+###
+
+POST http://127.0.0.1:8000/api/tasks/
+Content-Type: application/json
+
+{
+    "title": "Buy groceries",
+    "description": "Buy groceries for the weekend",
+    "category": 1,
+    "priority_score": 0.5,
+    "deadline": "2023-01-01T00:00:00Z",
+    "status": "pending",
+    "is_ai_suggested": false
+}
+
+###
+
+GET http://127.0.0.1:8000/api/tasks/1/
+Accept: application/json
+
+###
+
+POST http://127.0.0.1:8000/api/tasks/1/complete/
+Content-Type: application/json
+
+###
+
+POST http://127.0.0.1:8000/api/tasks/1/set-priority/
+Content-Type: application/json
+
+{
+    "score": 99
+}
+
+###
+
+POST http://127.0.0.1:8000/api/tasks/1/assign-category-by-name/
+Content-Type: application/json
+
+{
+    "category_name": "Work"
+}
+
+###
+
+POST http://127.0.0.1:8000/api/tasks/batch-ai-prioritization/
+Content-Type: application/json
+
+{
+    "task_ids": [1, 2, 3]
+}
+
+###
