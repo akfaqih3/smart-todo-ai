@@ -45,6 +45,7 @@ INSTALLED_APPS = [
 
     # Apps
     'tasks',
+    'context',
 ]
 
 MIDDLEWARE = [

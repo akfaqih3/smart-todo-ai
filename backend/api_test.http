@@ -85,3 +85,34 @@ Content-Type: application/json
 }
 
 ###
+
+POST http://127.0.0.1:8000/api/tasks/1/get-ai-suggestions/
+Accept: application/json
+
+###
+
+
+### context app
+
+GET http://127.0.0.1:8000/api/context/?source_type=note&start_date=2023-01-01
+Accept: application/json
+
+###
+
+POST http://127.0.0.1:8000/api/context/
+Content-Type: application/json
+
+{
+    "content": "Buy groceries",
+    "source_type": "whatsapp",
+    "timestamp": "2023-01-01T00:00:00Z"
+}
+
+###
+
+GET http://127.0.0.1:8000/api/context/1/
+Accept: application/json
+
+###
+
+
