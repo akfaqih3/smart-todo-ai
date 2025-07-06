@@ -38,14 +38,11 @@ POST http://127.0.0.1:8000/api/tasks/
 Content-Type: application/json
 
 {
-    "title": "Buy groceries",
-    "description": "Buy groceries for the weekend",
-    "category": 1,
-    "priority_score": 0.5,
-    "deadline": "2023-01-01T00:00:00Z",
-    "status": "pending",
-    "is_ai_suggested": false
+    "title": "Write report on Q3 sales performance",
+    "description": "Analyze sales data from July to September and summarize key findings.",
+    "status": "pending"
 }
+
 
 ###
 
