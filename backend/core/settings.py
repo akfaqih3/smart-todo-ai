@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     # Apps
     'tasks',
     'context',
+    'ai_integration'
 ]
 
 MIDDLEWARE = [
@@ -129,3 +130,8 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# AI Integration Settings
+AI_MODEL_API_URL = 'http://localhost:1234/v1/chat/completions' # LM Studio default API endpoint
+AI_MODEL_NAME = 'tinyllama-1.1b-chat-v1.0' # LM Studio default model name
