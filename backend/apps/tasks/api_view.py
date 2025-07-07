@@ -17,7 +17,6 @@ class CategoryViewSet(viewsets.ModelViewSet):
     serializer_class = CategorySerializer
     # permission_classes = [permissions.IsAuthenticated] # Add permissions later if needed
 
-    # ... (increment_usage and decrement_usage actions remain the same) ...
     @action(detail=True, methods=['post'], url_path='increment-usage')
     def increment_usage(self, request, pk=None):
         """
@@ -70,80 +69,93 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         """
-        Override create method to apply AI suggestions upon task creation.
+        Override create method to optionally apply AI suggestions upon task creation.
+        AI suggestions are applied only if 'apply_ai' is True in the request data.
         """
+        # Check if AI should be applied
+        apply_ai = self.request.data.get('apply_ai', False)
+        
         task = serializer.save() # Save the task initially
 
-        ai_service = AIService()
+        if apply_ai:
+            ai_service = AIService()
 
-        # 1. AI Priority Suggestion
-        priority_score = ai_service.get_task_priority_score(task.title, task.description)
-        if priority_score is not None:
-            task.set_ai_priority(priority_score) # This method also sets human-readable priority
-
-        # 2. AI Deadline Suggestion
-        suggested_deadline = ai_service.suggest_deadline(task.title, task.description, timezone.now().date())
-        if suggested_deadline:
-            task.deadline = suggested_deadline
-
-        # 3. AI Category Suggestion
-        suggested_categories = ai_service.suggest_categories_and_tags(task.title, task.description)
-        if suggested_categories:
-            # Try to assign the first suggested category if it exists or create it
-            if suggested_categories:
-                first_suggested_category_name = suggested_categories[0]
-                category, created = Category.objects.get_or_create(name=first_suggested_category_name)
-                task.category = category
-                if created:
-                    print(f"Created new category: {category.name}")
-                # Increment usage for the newly assigned category
-                category.increment_usage() # This is handled in Task.save() now, but good to be explicit
-
-        # 4. AI Task Enhancement (optional, might be better as a separate action)
-        # enhanced_description = ai_service.enhance_task_description(task.title, task.description)
-        # if enhanced_description:
-        #     task.description = enhanced_description
-
-        task.is_ai_suggested = True # Mark as AI-processed
-        task.save() # Save all AI-generated updates
-
-    def perform_update(self, serializer):
-        """
-        Override update method to potentially re-apply AI suggestions if title/description changes.
-        """
-        task = serializer.save() # Save the task with updated data
-
-        ai_service = AIService()
-        re_process_ai = False
-
-        # Check if title or description has changed, which might trigger re-processing
-        if 'title' in serializer.validated_data or 'description' in serializer.validated_data:
-            re_process_ai = True
-
-        if re_process_ai:
-            # Re-suggest priority
+            # 1. AI Priority Suggestion
             priority_score = ai_service.get_task_priority_score(task.title, task.description)
             if priority_score is not None:
-                task.set_ai_priority(priority_score)
+                task.set_ai_priority(priority_score) # This method also sets human-readable priority
 
-            # Re-suggest deadline
+            # 2. AI Deadline Suggestion
             suggested_deadline = ai_service.suggest_deadline(task.title, task.description, timezone.now().date())
             if suggested_deadline:
                 task.deadline = suggested_deadline
 
-            # Re-suggest category (optional, might be disruptive if user set it manually)
-            # suggested_categories = ai_service.suggest_categories_and_tags(task.title, task.description)
-            # if suggested_categories:
-            #     first_suggested_category_name = suggested_categories[0]
-            #     category, created = Category.objects.get_or_create(name=first_suggested_category_name)
-            #     task.category = category
-            #     if created:
-            #         print(f"Created new category on update: {category.name}")
+            # 3. AI Category Suggestion
+            suggested_categories = ai_service.suggest_categories_and_tags(task.title, task.description)
+            if suggested_categories:
+                # Try to assign the first suggested category if it exists or create it
+                if suggested_categories:
+                    first_suggested_category_name = suggested_categories[0]
+                    category, created = Category.objects.get_or_create(name=first_suggested_category_name)
+                    task.category = category
+                    if created:
+                        print(f"Created new category: {category.name}")
+                    # Increment usage for the newly assigned category
+                    category.increment_usage() # This is handled in Task.save() now, but good to be explicit
+
+            # 4. AI Task Enhancement (optional, might be better as a separate action)
+            # enhanced_description = ai_service.enhance_task_description(task.title, task.description)
+            # if enhanced_description:
+            #     task.description = enhanced_description
 
             task.is_ai_suggested = True # Mark as AI-processed
             task.save() # Save all AI-generated updates
+        else:
+            # If no AI is applied, just ensure is_ai_suggested is False
+            task.is_ai_suggested = False
+            task.save()
 
-    # ... (complete, set_priority, assign_category_by_name actions remain the same) ...
+    def perform_update(self, serializer):
+        """
+        Override update method to potentially re-apply AI suggestions if title/description changes.
+        AI suggestions are re-applied only if 'apply_ai' is True in the request data.
+        """
+        # Check if AI should be applied
+        apply_ai = self.request.data.get('apply_ai', False)
+        
+        task = serializer.save() # Save the task with updated data
+
+        if apply_ai:
+            ai_service = AIService()
+            re_process_ai = False
+
+            # Check if title or description has changed, which might trigger re-processing
+            if 'title' in serializer.validated_data or 'description' in serializer.validated_data:
+                re_process_ai = True
+
+            if re_process_ai:
+                # Re-suggest priority
+                priority_score = ai_service.get_task_priority_score(task.title, task.description)
+                if priority_score is not None:
+                    task.set_ai_priority(priority_score)
+
+                # Re-suggest deadline
+                suggested_deadline = ai_service.suggest_deadline(task.title, task.description, timezone.now().date())
+                if suggested_deadline:
+                    task.deadline = suggested_deadline
+
+                # Re-suggest category (optional, might be disruptive if user set it manually)
+                # suggested_categories = ai_service.suggest_categories_and_tags(task.title, task.description)
+                # if suggested_categories:
+                #     first_suggested_category_name = suggested_categories[0]
+                #     category, created = Category.objects.get_or_create(name=first_suggested_category_name)
+                #     task.category = category
+                #     if created:
+                #         print(f"Created new category on update: {category.name}")
+
+                task.is_ai_suggested = True # Mark as AI-processed
+                task.save() # Save all AI-generated updates
+
     @action(detail=True, methods=['post'], url_path='complete')
     def complete(self, request, pk=None):
         """
@@ -185,7 +197,6 @@ class TaskViewSet(viewsets.ModelViewSet):
             return Response(self.get_serializer(task).data, status=status.HTTP_200_OK)
         return Response({'error': 'Category name is required'}, status=status.HTTP_400_BAD_REQUEST)
 
-    # New AI-specific actions for on-demand suggestions
     @action(detail=True, methods=['post'], url_path='get-ai-suggestions')
     def get_ai_suggestions(self, request, pk=None):
         """
@@ -196,47 +207,86 @@ class TaskViewSet(viewsets.ModelViewSet):
         response_data = {}
 
         # Get context insights if available (assuming we can fetch related context entries)
-        # For now, we'll just use task details. In a real app, you'd fetch relevant ContextEntry objects.
         context_insights = None # Placeholder for now
 
         # Priority
         priority_score = ai_service.get_task_priority_score(task.title, task.description, context_insights)
         if priority_score is not None:
-            task.set_ai_priority(priority_score)
             response_data['suggested_priority_score'] = priority_score
-            response_data['suggested_priority'] = task.priority # Human-readable
+            # Need to get human-readable priority from score
+            # This logic should ideally be in a helper or Task model method
+            if priority_score >= 70:
+                response_data['suggested_priority'] = 'high'
+            elif priority_score >= 40:
+                response_data['suggested_priority'] = 'medium'
+            else:
+                response_data['suggested_priority'] = 'low'
 
         # Deadline
         suggested_deadline = ai_service.suggest_deadline(task.title, task.description, timezone.now().date(), context_insights)
         if suggested_deadline:
-            task.deadline = suggested_deadline
             response_data['suggested_deadline'] = suggested_deadline.isoformat()
 
         # Categories
         suggested_categories = ai_service.suggest_categories_and_tags(task.title, task.description)
         if suggested_categories:
             response_data['suggested_categories'] = suggested_categories
-            # Optionally, assign the first one
-            # if suggested_categories:
-            #     first_suggested_category_name = suggested_categories[0]
-            #     category, created = Category.objects.get_or_create(name=first_suggested_category_name)
-            #     task.category = category
-            #     if created:
-            #         print(f"Created new category via AI suggestion action: {category.name}")
 
         # Task Enhancement
         enhanced_description = ai_service.enhance_task_description(task.title, task.description, context_insights)
         if enhanced_description:
-            task.description = enhanced_description
             response_data['enhanced_description'] = enhanced_description
 
-        task.is_ai_suggested = True # Mark as AI-processed
-        task.save() # Save all AI-generated updates
-
-        response_data['message'] = 'AI suggestions applied and returned.'
-        response_data['updated_task'] = self.get_serializer(task).data
+        response_data['message'] = 'AI suggestions generated.'
         return Response(response_data, status=status.HTTP_200_OK)
 
+    @action(detail=False, methods=['post'], url_path='get-ai-suggestions-for-new-task')
+    def get_ai_suggestions_for_new_task(self, request):
+        """
+        Endpoint to get AI suggestions for a new task based on provided title and description.
+        Does NOT save the task.
+        Expects 'title' and 'description' in request data.
+        """
+        title = request.data.get('title')
+        description = request.data.get('description')
+
+        if not title:
+            return Response({'error': 'Title is required for AI suggestions.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        ai_service = AIService()
+        response_data = {}
+
+        # Priority
+        priority_score = ai_service.get_task_priority_score(title, description)
+        if priority_score is not None:
+            response_data['suggested_priority_score'] = priority_score
+            # Need to get human-readable priority from score
+            # This logic should ideally be in a helper or Task model method
+            if priority_score >= 70:
+                response_data['suggested_priority'] = 'high'
+            elif priority_score >= 40:
+                response_data['suggested_priority'] = 'medium'
+            else:
+                response_data['suggested_priority'] = 'low'
+
+        # Deadline
+        suggested_deadline = ai_service.suggest_deadline(title, description, timezone.now().date())
+        if suggested_deadline:
+            response_data['suggested_deadline'] = suggested_deadline.isoformat()
+
+        # Categories
+        suggested_categories = ai_service.suggest_categories_and_tags(title, description)
+        if suggested_categories:
+            response_data['suggested_categories'] = suggested_categories
+
+        # Task Enhancement
+        enhanced_description = ai_service.enhance_task_description(title, description)
+        if enhanced_description:
+            response_data['enhanced_description'] = enhanced_description
+
+        response_data['message'] = 'AI suggestions generated for new task.'
+        return Response(response_data, status=status.HTTP_200_OK)
+    
     @action(detail=False, methods=['post'], url_path='batch-ai-prioritization')
     def batch_ai_prioritization(self, request):
         """

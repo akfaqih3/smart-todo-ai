@@ -128,3 +128,8 @@ Content-Type: application/json
     "stream": false
 }
 
+
+
+### 
+POST http://localhost:8000/api/tasks/6/get-ai-suggestions/
+Content-Type: application/json
