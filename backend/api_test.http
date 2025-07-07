@@ -1,0 +1,135 @@
+### Test API endpoints
+
+GET http://127.0.0.1:8000/api/categories/
+Accept: application/json
+
+###
+
+POST http://127.0.0.1:8000/api/categories/
+Content-Type: application/json
+
+{
+    "name": "Personal"
+}
+
+###
+
+GET http://127.0.0.1:8000/api/categories/1/
+Accept: application/json
+
+###
+
+POST http://127.0.0.1:8000/api/categories/1/increment-usage/
+Content-Type: application/json
+
+###
+
+POST http://127.0.0.1:8000/api/categories/1/decrement-usage/
+Content-Type: application/json
+
+###
+
+GET http://127.0.0.1:8000/api/tasks/
+Accept: application/json
+
+###
+
+POST http://127.0.0.1:8000/api/tasks/
+Content-Type: application/json
+
+{
+    "title": "Write report on Q3 sales performance",
+    "description": "Analyze sales data from July to September and summarize key findings.",
+    "status": "pending"
+}
+
+
+###
+
+GET http://127.0.0.1:8000/api/tasks/1/
+Accept: application/json
+
+###
+
+POST http://127.0.0.1:8000/api/tasks/1/complete/
+Content-Type: application/json
+
+###
+
+POST http://127.0.0.1:8000/api/tasks/1/set-priority/
+Content-Type: application/json
+
+{
+    "score": 99
+}
+
+###
+
+POST http://127.0.0.1:8000/api/tasks/1/assign-category-by-name/
+Content-Type: application/json
+
+{
+    "category_name": "Work"
+}
+
+###
+
+POST http://127.0.0.1:8000/api/tasks/batch-ai-prioritization/
+Content-Type: application/json
+
+{
+    "task_ids": [1, 2, 3]
+}
+
+###
+
+POST http://127.0.0.1:8000/api/tasks/1/get-ai-suggestions/
+Accept: application/json
+
+###
+
+
+### context app
+
+GET http://127.0.0.1:8000/api/context/
+Accept: application/json
+
+###
+
+POST http://127.0.0.1:8000/api/context/
+Content-Type: application/json
+
+{
+    "content": "Received an email from client about the new feature request. They want it by next Friday. It seems urgent.",
+    "source_type": "email"
+}
+
+
+###
+
+GET http://127.0.0.1:8000/api/context/1/
+Accept: application/json
+
+###
+
+### send request to AI model
+
+POST http://localhost:1234/v1/chat/completions
+Content-Type: application/json
+
+   {
+    "model": "tinyllama-1.1b-chat-v1.0",
+    "messages": [
+      { "role": "system", "content": "Always answer in rhymes. Today is Thursday" },
+      { "role": "user", "content": "What day is it today?" }
+    ],
+    "temperature": 0.7,
+    "max_tokens": -1,
+    "stream": false
+}
+
+
+
+### 
+POST http://localhost:8000/api/tasks/6/get-ai-suggestions/
+Content-Type: application/json
